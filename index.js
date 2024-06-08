@@ -94,8 +94,24 @@ async function lyricsCrawling(p, dbconn) {
 
         console.log('Filtered Hrefs:', filteredHrefs);
 
+        
+
     } catch(error) {
         console.log(error);
+    }
+}
+
+async function urlIdentifier(url) {
+    if (url.includes("/tag/")) {
+        return "tag";
+    } else if (url.endsWith("-lyrics")) {
+        return "lyrics";
+    } else if (url.includes("/artists/")) {
+        return "artist";
+    } else if (url.includes("/albums/")) {
+        return "album";
+    } else {
+        return "crap";
     }
 }
 

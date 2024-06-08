@@ -45,4 +45,5 @@ https://genius.com/artists-index/x
 https://genius.com/artists-index/y
 https://genius.com/artists-index/z
 https://genius.com/artists-index/0
+https://genius.com/signup_or_login
 mailto:inquiry@genius.com

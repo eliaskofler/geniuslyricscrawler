@@ -219,15 +219,15 @@ async function putIntoDatabase(url, dbconn) {
 async function urlIdentifier(url) {
     if (url.includes("/tags/")) {
         return "tag_urls";
+    } else if (url.includes("https://genius.com/Genius-")) {
+        return "translation_urls";
     } else if (url.endsWith("-lyrics")) {
         return "song_urls";
     } else if (url.includes("/artists/")) {
         return "artist_urls";
     } else if (url.includes("/albums/")) {
         return "album_urls";
-    } else if (url.includes("https://genius.com/Genius-")) {
-        return "translation_urls";
-    }else {
+    } else {
         return "crap_urls";
     }
 }

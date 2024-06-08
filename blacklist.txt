@@ -1,7 +1,6 @@
 https://genius.com/feedback/new
 https://genius.com/contributor_guidelines
 https://genius.com/press
-https://shop.genius.com/
 https://genius.com/static/privacy_policy
 https://genius.com/static/licensing
 https://genius.com/jobs
@@ -16,7 +15,6 @@ https://genius.com/#featured-stories
 https://genius.com/
 https://genius.com/#videos
 https://genius.com/#top-songs
-https://promote.genius.com/
 https://genius.com/hot-songs
 https://genius.com/artists-index/a
 https://genius.com/artists-index/b
@@ -46,4 +44,5 @@ https://genius.com/artists-index/y
 https://genius.com/artists-index/z
 https://genius.com/artists-index/0
 https://genius.com/signup_or_login
+https://genius.com/transcribers
 mailto:inquiry@genius.com

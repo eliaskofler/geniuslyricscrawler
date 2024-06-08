@@ -41,7 +41,12 @@ async function initializeGenius(p, dbconn) {
 async function lyricsCrawling(p, dbconn) {
     try {
         console.log("crawling..");
-        const url = "https://genius.com/Udo-jurgens-griechischer-wein-lyrics";
+        const url = await getUrlToFetch(dbconn);
+        //const url = "https://genius.com/Udo-jurgens-jeder-lugt-so-wie-er-kann-lyrics"
+        if (!url) {
+            console.error('No URL found to fetch.');
+            return;
+        }
         const blacklist = await fs.readFile('blacklist.txt', 'utf-8');
         const blacklistArray = blacklist.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
@@ -67,19 +72,72 @@ async function lyricsCrawling(p, dbconn) {
             return;
         }
 
-
         await p.waitForSelector('div[data-lyrics-container="true"]');
 
-        const content = await p.evaluate(() => {
+        const lyrics = await p.evaluate(() => {
             const elements = document.querySelectorAll('div[data-lyrics-container="true"]');
             return Array.from(elements).map(element => {
-            element.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-            return element.textContent;
+                element.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+                return element.textContent;
             }).join('\n');
         });
 
-        console.log('Content:', content);
+        const author = await p.evaluate(() => {
+            const element = document.evaluate('//*[@id="application"]/main/div[1]/div[3]/div[1]/div[1]/div[1]/span/span/a', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+            return element.singleNodeValue.textContent.trim();
+        });
 
+        const releaseDate = await p.evaluate(() => {
+            try {
+                const element = document.evaluate('//*[@id="application"]/main/div[1]/div[3]/div[1]/div[2]/div/span[1]/span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                if (element && element.singleNodeValue) {
+                    if (element.singleNodeValue.textContent.trim().includes("viewer")) {
+                        return "No release date given.";
+                    } else if (element.singleNodeValue.textContent.trim().includes("view")) {
+                        return "No release date given.";
+                    }
+                    return element.singleNodeValue.textContent.trim();
+                } else {
+                    return "No release date given.";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                return "Error occurred while retrieving release date";
+            }
+        });
+        
+        const views = await p.evaluate(() => {
+            try {
+                const element = document.evaluate('//*[@id="application"]/main/div[1]/div[3]/div[1]/div[2]/div/span[3]/span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                if (element && element.singleNodeValue) {
+                    return element.singleNodeValue.textContent.trim();
+                } else {
+                    return "No views given.";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                return "Error occurred while retrieving views";
+            }
+        });
+
+        const title = await p.evaluate(() => {
+            const titelm = document.querySelector('h1').textContent;
+            return titelm
+        })
+
+        const cover = await p.evaluate(() => {
+            const element = document.evaluate('//*[@id="application"]/main/div[1]/div[2]/div[2]/div/img', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            return element ? element.src : null;
+        });
+
+        //console.log('url: ', url);
+        //console.log('views: ', views)
+        //console.log('artist: ', author);
+        //console.log('release date: ', releaseDate);
+        //console.log('title: ', title);
+        //console.log('Content:', lyrics);
+
+        insertLyrics(url, title, author, lyrics, releaseDate, views, cover, dbconn);
 
         await p.waitForSelector('a');
 
@@ -89,29 +147,88 @@ async function lyricsCrawling(p, dbconn) {
         });
 
         const filteredHrefs = hrefs
-            .filter(href => href.includes('genius.com'))
+            .filter(href => href.includes('https://genius.com'))
             .filter(href => !blacklistArray.includes(href));
 
-        console.log('Filtered Hrefs:', filteredHrefs);
+        await filteredHrefs.forEach((href) => {
+            putIntoDatabase(href, dbconn);
+        })
 
-        
+        wipeOutUrl(url, dbconn);
+        lyricsCrawling(p, dbconn);
 
     } catch(error) {
         console.log(error);
+        lyricsCrawling(p, dbconn);
+    }
+}
+
+async function insertLyrics(url, title, artist, lyrics, release_date, views, cover, dbconn) {
+    try {
+        const insertQuery = `
+            INSERT INTO lyrics (url, title, artist, lyrics, release_date, views, cover)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+        const values = [url, title, artist, lyrics, release_date, views, cover];
+        
+        await dbconn.query(insertQuery, values);
+        
+        console.log('Lyrics inserted successfully');
+    } catch (error) {
+        console.error('Error inserting lyrics:', error);
+    }
+}
+
+async function wipeOutUrl(url, dbconn) {
+    try {
+        const [rows, fields] = await dbconn.execute('UPDATE song_urls SET visited = 1 WHERE url = ?', [url]);
+        console.log('URL marked as visited:', url);
+        return true;
+    } catch (error) {
+        console.error('Error marking URL as visited:', error);
+        return false;
+    }
+}
+
+async function getUrlToFetch(dbconn) {
+    try {
+        const [rows, fields] = await dbconn.execute('SELECT url FROM song_urls WHERE visited=0 ORDER BY RAND() LIMIT 1');
+        if (rows.length > 0) {
+            return rows[0].url;
+        } else {
+            console.error('No unvisited URLs found in the database.');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error fetching URL from the database:', error);
+        return null;
+    }
+}
+
+async function putIntoDatabase(url, dbconn) {
+    urlType = await urlIdentifier(url);
+
+    try {
+        const [rows, fields] = await dbconn.execute(`INSERT INTO ${urlType} (url, visited) VALUES (?, ?)`, [url, 0]);
+        console.log('Data inserted successfully');
+    } catch (error) {
+        //console.error('Error inserting data:', error);
     }
 }
 
 async function urlIdentifier(url) {
-    if (url.includes("/tag/")) {
-        return "tag";
+    if (url.includes("/tags/")) {
+        return "tag_urls";
     } else if (url.endsWith("-lyrics")) {
-        return "lyrics";
+        return "song_urls";
     } else if (url.includes("/artists/")) {
-        return "artist";
+        return "artist_urls";
     } else if (url.includes("/albums/")) {
-        return "album";
-    } else {
-        return "crap";
+        return "album_urls";
+    } else if (url.includes("https://genius.com/Genius-")) {
+        return "translation_urls";
+    }else {
+        return "crap_urls";
     }
 }
 

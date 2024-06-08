@@ -1,0 +1,39 @@
+CREATE TABLE artist_urls (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    url TEXT UNIQUE,
+    visited BOOLEAN,
+    last_visited TIMESTAMP,
+    inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE album_urls (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    url TEXT UNIQUE,
+    visited BOOLEAN,
+    last_visited TIMESTAMP,
+    inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE song_urls (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    url TEXT UNIQUE,
+    visited BOOLEAN,
+    last_visited TIMESTAMP,
+    inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE tag_urls (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    url TEXT UNIQUE,
+    visited BOOLEAN,
+    last_visited TIMESTAMP,
+    inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE crap_urls (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    url TEXT UNIQUE,
+    visited BOOLEAN,
+    last_visited TIMESTAMP,
+    inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

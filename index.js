@@ -68,14 +68,11 @@ async function lyricsCrawling(p, dbconn) {
         }
 
 
-        // Wait for the elements with the specified attribute to be loaded
         await p.waitForSelector('div[data-lyrics-container="true"]');
 
-        // Extract the content of all matching elements and join them into a single string
         const content = await p.evaluate(() => {
             const elements = document.querySelectorAll('div[data-lyrics-container="true"]');
             return Array.from(elements).map(element => {
-            // Replace <br> with newline characters
             element.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
             return element.textContent;
             }).join('\n');
@@ -86,13 +83,11 @@ async function lyricsCrawling(p, dbconn) {
 
         await p.waitForSelector('a');
 
-        // Extract all href attributes from anchor tags
         const hrefs = await p.evaluate(() => {
             const anchorElements = document.querySelectorAll('a');
             return Array.from(anchorElements).map(anchor => anchor.href);
         });
 
-        // Filter out the hrefs that are in the blacklist
         const filteredHrefs = hrefs
             .filter(href => href.includes('genius.com'))
             .filter(href => !blacklistArray.includes(href));

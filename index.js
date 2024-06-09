@@ -30,6 +30,12 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
             const p7 = await browser.newPage();
             const p8 = await browser.newPage();
             const p9 = await browser.newPage();
+            const p10 = await browser.newPage();
+            const p11 = await browser.newPage();
+            const p12 = await browser.newPage();
+            const p13 = await browser.newPage();
+            const p14 = await browser.newPage();
+            const p15 = await browser.newPage();
 
             await Promise.all([
                 initializeGenius(p1, dbconn),
@@ -40,7 +46,13 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
                 initializeGenius(p6, dbconn),
                 initializeGenius(p7, dbconn),
                 initializeGenius(p8, dbconn),
-                initializeGenius(p9, dbconn)
+                initializeGenius(p9, dbconn),
+                initializeGenius(p10, dbconn),
+                initializeGenius(p11, dbconn),
+                initializeGenius(p12, dbconn),
+                initializeGenius(p13, dbconn),
+                initializeGenius(p14, dbconn),
+                initializeGenius(p15, dbconn)
             ]);
         }
     } catch(error) {
@@ -56,7 +68,7 @@ async function initializeGenius(p, dbconn) {
 
 async function lyricsCrawling(p, dbconn) {
     try {
-        console.log("crawling..");
+        console.log(new Date() + "crawling..");
         const url = await getUrlToFetch(dbconn);
         //const url = "https://genius.com/Udo-jurgens-jeder-lugt-so-wie-er-kann-lyrics"
         if (!url) {
@@ -68,26 +80,6 @@ async function lyricsCrawling(p, dbconn) {
 
         await p.goto(url);
         await delay(1000);
-
-        const captchaDetected = await p.evaluate(() => {
-            return !!document.getElementById('pow-captcha-content');
-        });
-    
-        if (captchaDetected) {
-            console.log('CAPTCHA detected, sending HTTP GET request to 127.0.0.1:4321');
-            
-            http.get('http://127.0.0.1:4321', (res) => {
-                console.log(`Got response: ${res.statusCode}`);
-            }).on('error', (e) => {
-                console.error(`Got error: ${e.message}`);
-            });
-    
-            console.log('Waiting for 1 minute due to CAPTCHA.');
-            await delay(30000);
-            crawlData(p, connection);
-            return;
-        }
-
         await p.waitForSelector('div[data-lyrics-container="true"]');
 
         const lyrics = await p.evaluate(() => {

@@ -23,7 +23,7 @@ def monitor_memory_usage(process, nodejs_file_path):
         print(f"Memory usage: {memory_usage_gb:.2f} GB")
         
         # Check if memory usage exceeds 6.5 GB
-        if memory_usage_gb > 3.5:
+        if memory_usage_gb > 6.5:
             print("Memory usage exceeds 6.5 GB. Restarting Node.js process...")
             # Terminate the Node.js process
             if process:
@@ -34,13 +34,13 @@ def monitor_memory_usage(process, nodejs_file_path):
                 print("No Node.js process found to terminate.")
             
             # Restart the Node.js file
-            print("Restarting Node.js...")
+            print("\n\n\n\nRestarting Node.js...")
             run_nodejs_file(nodejs_file_path)
         
         else:
-            print("\n\n\n\n\n\n\n\n\nMemory usage is within limits.")
+            print("Memory usage is within limits.")
         
-        time.sleep(60)  # Check memory usage every 60 seconds
+        time.sleep(30)  # Check memory usage every 60 seconds
 
 if __name__ == "__main__":
     nodejs_file_path = "index.js"

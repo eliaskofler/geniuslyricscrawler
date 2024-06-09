@@ -8,24 +8,36 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 (async () => {
     try {
         const dbconn = await mysql.createConnection({
-            host: 'localhost',
-            user: '',
-            password: '',
+            host: '45.84.199.170',
+            user: 'root',
+            password: '!Stiefel(123)',
             database: 'geniuslyrics'
         });
         
-        const browser = await puppeteer.launch({ headless: false });
+        const browser0 = await puppeteer.launch({ headless: false });
         
         await Promise.all([
-            openNewPages(browser)
+            openNewPages(browser0),
         ]);
 
         async function openNewPages(browser) {
             const p1 = await browser.newPage();
+            const p2 = await browser.newPage();
+            const p3 = await browser.newPage();
+            const p4 = await browser.newPage();
+            const p5 = await browser.newPage();
+            const p6 = await browser.newPage();
+            const p7 = await browser.newPage();
 
             await Promise.all([
-                initializeGenius(p1, dbconn)
-            ])
+                initializeGenius(p1, dbconn),
+                initializeGenius(p2, dbconn),
+                initializeGenius(p3, dbconn),
+                initializeGenius(p4, dbconn),
+                initializeGenius(p5, dbconn),
+                initializeGenius(p6, dbconn),
+                initializeGenius(p7, dbconn),
+            ]);
         }
     } catch(error) {
         console.log(error);

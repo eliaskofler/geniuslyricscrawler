@@ -28,6 +28,8 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
             const p5 = await browser.newPage();
             const p6 = await browser.newPage();
             const p7 = await browser.newPage();
+            const p8 = await browser.newPage();
+            const p9 = await browser.newPage();
 
             await Promise.all([
                 initializeGenius(p1, dbconn),
@@ -37,6 +39,8 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
                 initializeGenius(p5, dbconn),
                 initializeGenius(p6, dbconn),
                 initializeGenius(p7, dbconn),
+                initializeGenius(p8, dbconn),
+                initializeGenius(p9, dbconn)
             ]);
         }
     } catch(error) {

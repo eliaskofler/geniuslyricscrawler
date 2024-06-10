@@ -8,12 +8,12 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 (async () => {
     try {
         const dbconn = await mysql.createConnection({
-            host: '45.84.199.170',
+            host: 'obunic.net',
             user: 'root',
             password: '!Stiefel(123)',
             database: 'geniuslyrics'
         });
-        
+
         const browser0 = await puppeteer.launch({
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
@@ -29,15 +29,6 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
             const p4 = await browser.newPage();
             const p5 = await browser.newPage();
             const p6 = await browser.newPage();
-            const p7 = await browser.newPage();
-            const p8 = await browser.newPage();
-            const p9 = await browser.newPage();
-            const p10 = await browser.newPage();
-            const p11 = await browser.newPage();
-            const p12 = await browser.newPage();
-            const p13 = await browser.newPage();
-            const p14 = await browser.newPage();
-            const p15 = await browser.newPage();
 
             await Promise.all([
                 initializeGenius(p1, dbconn),
@@ -46,15 +37,6 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
                 initializeGenius(p4, dbconn),
                 initializeGenius(p5, dbconn),
                 initializeGenius(p6, dbconn),
-                initializeGenius(p7, dbconn),
-                initializeGenius(p8, dbconn),
-                initializeGenius(p9, dbconn),
-                initializeGenius(p10, dbconn),
-                initializeGenius(p11, dbconn),
-                initializeGenius(p12, dbconn),
-                initializeGenius(p13, dbconn),
-                initializeGenius(p14, dbconn),
-                initializeGenius(p15, dbconn)
             ]);
         }
     } catch(error) {
@@ -168,7 +150,6 @@ async function lyricsCrawling(p, dbconn) {
         lyricsCrawling(p, dbconn);
 
     } catch(error) {
-        console.log(error);
         lyricsCrawling(p, dbconn);
     }
 }

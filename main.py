@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Database connection parameters
 db_params = {
-    'host': 'localhost',
+    'host': 'obunic.net',
     'user': 'root',
     'password': '!Stiefel(123)',
     'database': 'geniuslyrics'

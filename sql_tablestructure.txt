@@ -56,3 +56,15 @@ CREATE TABLE lyrics (
     views TEXT,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE TABLE artists (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    url TEXT UNIQUE,
+    name TEXT,
+    slug TEXT,
+    artist_id int,
+    description TEXT,
+    image_url TEXT,
+    header_image_url TEXT,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

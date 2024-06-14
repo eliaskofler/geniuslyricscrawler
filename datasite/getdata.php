@@ -21,7 +21,7 @@ if ($conn->connect_error) {
 }
 
 // List of tables to get the count of rows
-$tables = array("album_urls", "artist_urls", "lyrics", "song_urls", "crap_urls", "translation_urls", "tag_urls");
+$tables = array("lyrics", "artists", "album_urls", "artist_urls", "song_urls", "crap_urls", "translation_urls", "tag_urls");
 
 // Initialize an array to store the counts
 $dataCounts = array();
@@ -43,7 +43,7 @@ foreach ($tables as $table) {
 }
 
 // Add total count to the data counts array
-$dataCounts["total"] = $totalCount;
+$dataCounts = array_merge(array("total" => $totalCount), $dataCounts);
 
 // Close the connection
 $conn->close();

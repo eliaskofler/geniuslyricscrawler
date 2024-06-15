@@ -22,6 +22,14 @@ CREATE TABLE song_urls (
     inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE priority_song_urls (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    url TEXT UNIQUE,
+    visited BOOLEAN,
+    last_visited TIMESTAMP,
+    inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE tag_urls (
     id INT AUTO_INCREMENT PRIMARY KEY,
     url TEXT UNIQUE,

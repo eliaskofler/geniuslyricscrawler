@@ -157,6 +157,11 @@ async function insertLyrics(url, title, artist, lyrics, release_date, views, cov
         const insertQuery = `
             INSERT INTO lyrics (url, title, artist, lyrics, release_date, views, cover)
             VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                title = VALUES(title),
+                artist = VALUES(artist),
+                release_date = VALUES(release_date),
+                cover = VALUES(cover)
         `;
         const values = [url, title, artist, lyrics, release_date, views, cover];
         
@@ -170,9 +175,24 @@ async function insertLyrics(url, title, artist, lyrics, release_date, views, cov
 
 async function wipeOutUrl(url, dbconn) {
     try {
-        const [rows, fields] = await dbconn.execute('UPDATE song_urls SET visited = 1 WHERE url = ?', [url]);
-        console.log('URL marked as visited:', url);
-        return true;
+        // First, try to mark the URL as visited in the priority_song_urls table
+        let [rows, fields] = await dbconn.execute('UPDATE priority_song_urls SET visited = 1 WHERE url = ?', [url]);
+        
+        if (rows.affectedRows > 0) {
+            console.log('URL marked as visited in priority_song_urls:', url);
+            return true;
+        }
+
+        // If no rows were affected in priority_song_urls, try to mark it as visited in song_urls
+        [rows, fields] = await dbconn.execute('UPDATE song_urls SET visited = 1 WHERE url = ?', [url]);
+        
+        if (rows.affectedRows > 0) {
+            console.log('URL marked as visited in song_urls:', url);
+            return true;
+        } else {
+            console.error('URL not found in either table:', url);
+            return false;
+        }
     } catch (error) {
         console.error('Error marking URL as visited:', error);
         return false;
@@ -181,11 +201,20 @@ async function wipeOutUrl(url, dbconn) {
 
 async function getUrlToFetch(dbconn) {
     try {
-        const [rows, fields] = await dbconn.execute('SELECT url FROM song_urls WHERE visited=0 ORDER BY RAND() LIMIT 1');
+        // First, try to get an unvisited URL from the priority_song_urls table
+        let [rows, fields] = await dbconn.execute('SELECT url FROM priority_song_urls WHERE visited=0 ORDER BY RAND() LIMIT 1');
+        
+        if (rows.length > 0) {
+            return rows[0].url;
+        } 
+
+        // If no unvisited URLs in priority_song_urls, fall back to song_urls
+        [rows, fields] = await dbconn.execute('SELECT url FROM song_urls WHERE visited=0 ORDER BY RAND() LIMIT 1');
+        
         if (rows.length > 0) {
             return rows[0].url;
         } else {
-            console.error('No unvisited URLs found in the database.');
+            console.error('No unvisited URLs found in either table.');
             return null;
         }
     } catch (error) {

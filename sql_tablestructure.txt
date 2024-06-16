@@ -76,3 +76,19 @@ CREATE TABLE artists (
     header_image_url TEXT,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE TABLE albums (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    url TEXT UNIQUE,
+    full_title TEXT,
+    name TEXT,
+    album_id INT,
+    cover_art_thumbnail TEXT,
+    cover_art_url TEXT,
+    release_date TEXT,
+    artist_id INT,
+    artist_name TEXT,
+    artist_slug TEXT,
+    artist_url TEXT,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

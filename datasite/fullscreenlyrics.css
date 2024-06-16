@@ -1,0 +1,57 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-image: url(blurred_image.jpg);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed; /* Add this line */
+    color: white;
+    font-family: arial, sans-serif;
+}
+
+.lyricscontainer {
+    font-size: 38px;
+    line-height: 52px;
+    color: white;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    text-align: center;
+    font-weight: bolder;
+    padding-top: 12%;
+    padding-bottom: 20%;
+}
+
+.lyAheader {
+    position: fixed;
+    border-radius: 20px;
+    align-items: center;
+    display: flex;
+    margin-bottom: 15px;
+    background: rgba(92, 92, 92, 0.584);
+    width: auto;
+    padding: 10px 80px 10px 10px;
+    margin: 10px;
+}
+
+.lyAimg img {
+    height: 40px;
+    border-radius: 10px;
+}
+
+.lyAtitle {
+    font-size: 16px;
+    font-weight: bolder;
+}
+
+.lyAauthor {
+    font-size: 14px;
+    font-weight: lighter;
+}
+
+.lyAinfo {
+    margin-left: 12px;
+    display: block;
+}

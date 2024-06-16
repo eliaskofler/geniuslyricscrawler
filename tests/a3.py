@@ -20,19 +20,29 @@ def get_db_connection():
 def get_random_artist_id(connection):
     try:
         cursor = connection.cursor()
-        cursor.execute("SELECT artist_id FROM artists WHERE albums_fetched = 0")
+        
+        # Adjusted query to exclude specific URLs
+        query = """
+            SELECT artist_id 
+            FROM artists 
+            WHERE albums_fetched = 0 
+            AND url NOT LIKE 'https://genius.com/artists/Genius-%'
+        """
+        cursor.execute(query)
+        
         artists = cursor.fetchall()
         if artists:
             artist_id = random.choice(artists)[0]
             return artist_id
         else:
-            print("No artists found with albums_fetched = 0.")
+            print("No artists found with albums_fetched = 0 or matching URL criteria.")
             return None
     except Error as e:
         print(f"Error fetching artist_id from MySQL table: {e}")
         return None
     finally:
-        cursor.close()
+        if 'cursor' in locals() and cursor is not None:
+            cursor.close()
 
 def update_artist_fetched_status(connection, artist_id):
     try:

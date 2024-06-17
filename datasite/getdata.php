@@ -21,7 +21,7 @@ if ($conn->connect_error) {
 }
 
 // List of tables to get the count of rows
-$tables = array("lyrics", "artists", "albums", "album_urls", "artist_urls", "song_urls", "crap_urls", "translation_urls", "tag_urls");
+$tables = array("lyrics", "album_songs", "artists", "albums", "album_urls", "artist_urls", "song_urls");
 
 // Initialize an array to store the counts
 $dataCounts = array();

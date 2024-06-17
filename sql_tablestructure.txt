@@ -92,3 +92,10 @@ CREATE TABLE albums (
     artist_url TEXT,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE TABLE album_songs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    song_url VARCHAR(255),
+    album_id INT,
+    UNIQUE KEY unique_song_album (song_url, album_id)
+);

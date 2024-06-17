@@ -14,7 +14,7 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
             database: 'geniuslyrics'
         });
 
-        const browser0 = await puppeteer.launch({ headless: false });
+        const browser0 = await puppeteer.launch({ headless: true });
         
         await Promise.all([
             openNewPages(browser0),
@@ -22,9 +22,19 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 
         async function openNewPages(browser) {
             const p1 = await browser.newPage();
+            const p2 = await browser.newPage();
+            const p3 = await browser.newPage();
+            const p4 = await browser.newPage();
+            const p5 = await browser.newPage();
+            const p6 = await browser.newPage();
 
             await Promise.all([
                 initializeGenius(p1, dbconn),
+                initializeGenius(p2, dbconn),
+                initializeGenius(p3, dbconn),
+                initializeGenius(p4, dbconn),
+                initializeGenius(p5, dbconn),
+                initializeGenius(p6, dbconn),
             ]);
         }
     } catch(error) {
@@ -49,7 +59,7 @@ async function albumCrawling(p, dbconn) {
         }
 
         await p.goto(album_url);
-        await delay(1000);
+        await delay(500);
 
         const songs_container = '/html/body/routable-page/ng-outlet/album-page/div[2]/div[1]/div';
 
@@ -71,10 +81,10 @@ async function albumCrawling(p, dbconn) {
         }
 
         markAlbumAsFetched(dbconn, album_id)
-        //albumCrawling(p, dbconn);
+        albumCrawling(p, dbconn);
     } catch (error) {
         console.error("Error during scraping:", error);
-        //albumCrawling(p, dbconn);
+        albumCrawling(p, dbconn);
     }
 }
 

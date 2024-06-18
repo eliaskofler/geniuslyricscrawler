@@ -76,8 +76,10 @@ async function albumCrawling(p, dbconn) {
         for (const song_url of song_urls) {
             insertSongUrl(dbconn, song_url, album_id);
         }
-
-        markAlbumAsFetched(dbconn, album_id)
+        
+        if (song_urls.length > 0) {
+            markAlbumAsFetched(dbconn, album_id)
+        }
         albumCrawling(p, dbconn);
     } catch (error) {
         console.error("Error during scraping:", error);

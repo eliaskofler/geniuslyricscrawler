@@ -11,7 +11,7 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
             database: 'geniuslyrics'
         });
 
-        const browser0 = await puppeteer.launch({ headless: true });
+        const browser0 = await puppeteer.launch({ headless: false });
         
         await Promise.all([
             openNewPages(browser0),

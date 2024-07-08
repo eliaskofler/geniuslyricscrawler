@@ -73,7 +73,7 @@ async function lyricsCrawling(p, dbconn) {
         });
 
         const author = await p.evaluate(() => {
-            const element = document.evaluate('//*[@id="application"]/main/div[1]/div[3]/div[1]/div[1]/div[1]/span/span/a', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+            const element = document.evaluate('//*[@id="application"]/main/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/span/span/a', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
             return element.singleNodeValue.textContent.trim();
         });
 
@@ -148,6 +148,7 @@ async function lyricsCrawling(p, dbconn) {
         lyricsCrawling(p, dbconn);
 
     } catch(error) {
+        console.log(error)
         lyricsCrawling(p, dbconn);
     }
 }
@@ -184,7 +185,7 @@ async function wipeOutUrl(url, dbconn) {
         }
 
         // If no rows were affected in priority_song_urls, try to mark it as visited in song_urls
-        [rows, fields] = await dbconn.execute('UPDATE song_urls SET visited = 1 WHERE url = ?', [url]);
+        [rows, fields] = await dbconn.execute('UPDATE album_songs SET visited = 1 WHERE song_url = ?', [url]);
         
         if (rows.affectedRows > 0) {
             console.log('URL marked as visited in song_urls:', url);
@@ -209,10 +210,10 @@ async function getUrlToFetch(dbconn) {
         } 
 
         // If no unvisited URLs in priority_song_urls, fall back to song_urls
-        [rows, fields] = await dbconn.execute('SELECT url FROM song_urls WHERE visited=0 ORDER BY RAND() LIMIT 1');
+        [rows, fields] = await dbconn.execute('SELECT song_url FROM album_songs WHERE visited=0 ORDER BY RAND() LIMIT 1');
         
         if (rows.length > 0) {
-            return rows[0].url;
+            return rows[0].song_url;
         } else {
             console.error('No unvisited URLs found in either table.');
             return null;

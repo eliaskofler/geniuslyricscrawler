@@ -14,7 +14,7 @@ def run_nodejs_file(file_path):
         time.sleep(3)
 
 if __name__ == "__main__":
-    nodejs_file_path = "albums.js"
+    nodejs_file_path = "index.js"
     
     while True:
         run_nodejs_file(nodejs_file_path)

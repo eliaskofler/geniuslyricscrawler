@@ -18,7 +18,7 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
         console.log("Connected to database!")
 
         console.log("Launching browser..")
-        const browser0 = await puppeteer.launch({ headless: false });
+        const browser0 = await puppeteer.launch({ headless: true });
         console.log("Browser launched!")
         
         console.log("Opening new tabs and setting up...")
@@ -28,9 +28,13 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 
         async function openNewPages(browser) {
             const p1 = await browser.newPage();
+            const p2 = await browser.newPage();
+            const p3 = await browser.newPage();
 
             await Promise.all([
                 initializeGenius(p1, dbconn),
+                initializeGenius(p2, dbconn),
+                initializeGenius(p3, dbconn),
             ]);
         }
     } catch(error) {
@@ -46,13 +50,13 @@ async function initializeGenius(p, dbconn) {
 
 async function lyricsCrawling(p, dbconn) {
     try {
-        console.log(new Date() + "crawling..");
-        console.log("getting a url to fetch");
+        console.log("[:] crawling.. " + new Date());
+        console.log("[.] getting a url to fetch");
         const url = await getUrlToFetch(dbconn);
-        console.log("got a url to fetch");
+        console.log("[~] got a url to fetch");
         //const url = "https://genius.com/Udo-jurgens-jeder-lugt-so-wie-er-kann-lyrics"
         if (!url) {
-            console.error('No URL found to fetch.');
+            console.error('[!] No URL found to fetch.');
             return;
         }
         const blacklist = await fs.readFile('blacklist.txt', 'utf-8');
@@ -65,14 +69,16 @@ async function lyricsCrawling(p, dbconn) {
             const element = document.evaluate('//*[@id="lyrics-root"]/div[2]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
             if (element.textContent === "Lyrics for this song have yet to be released. Please check back once the song has been released.") {
                 return true;
+            } else if (element.textContent === "This song is an instrumental") {
+                return true;
             } else {
                 return false;
             }
         });
 
         if (nahBro) {
-            console.log("nahbro")
-            await insertLyrics(url, "", "", "Lyrics for this song have yet to be released. Please check back once the song has been released.", "", "", "", dbconn);
+            console.log("[~] No lyrics found on page.")
+            await insertLyrics(url, "", "", "We can't provide any lyrics to this song.", "", "", "", dbconn);
             await wipeOutUrl(url, dbconn);
             return lyricsCrawling(p, dbconn);
         }
@@ -179,9 +185,9 @@ async function insertLyrics(url, title, artist, lyrics, release_date, views, cov
         
         await dbconn.query(insertQuery, values);
         
-        console.log('Lyrics inserted successfully');
+        console.log('[+] Lyrics inserted successfully');
     } catch (error) {
-        console.error('Error inserting lyrics:', error);
+        console.error('[!] Error inserting lyrics:', error);
     }
 }
 
@@ -190,7 +196,7 @@ async function wipeOutUrl(url, dbconn) {
         [rows, fields] = await dbconn.execute('UPDATE album_songs SET visited = 1 WHERE song_url = ?', [url]);
         
         if (rows.affectedRows > 0) {
-            console.log('URL marked as visited in song_urls:', url);
+            console.log('[~] URL marked as visited in song_urls:', url);
             return true;
         } else {
             console.error('URL not found in either table:', url);
@@ -204,12 +210,14 @@ async function wipeOutUrl(url, dbconn) {
 
 async function getUrlToFetch(dbconn) {
     try {
-        [rows, fields] = await dbconn.execute('SELECT song_url FROM album_songs WHERE visited=0 LIMIT 1');
+        const [rows, fields] = await dbconn.execute('SELECT song_url FROM album_songs WHERE visited=0 LIMIT 250');
         
         if (rows.length > 0) {
-            return rows[0].song_url;
+            // Select a random row from the fetched rows
+            const randomIndex = Math.floor(Math.random() * rows.length);
+            return rows[randomIndex].song_url;
         } else {
-            console.error('No unvisited URLs found in either table.');
+            console.error('No unvisited URLs found in the table.');
             return null;
         }
     } catch (error) {
@@ -239,7 +247,7 @@ async function batchInsertIntoDatabase(urls, dbconn) {
 
         // Commit the transaction if all inserts succeed
         await dbconn.commit();
-        console.log('All data inserted successfully');
+        console.log('[+] All data inserted successfully');
     } catch (error) {
         console.error('Transaction failed:', error);
     }

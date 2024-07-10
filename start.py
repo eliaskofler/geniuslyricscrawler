@@ -5,7 +5,7 @@ def run_nodejs_file(file_path):
     try:
         process = subprocess.Popen(['node', file_path])
         print("Node.js process started.")
-        time.sleep(600)
+        time.sleep(500)
         print("Shutting down Node.js process...")
         process.kill()
     except Exception as e:

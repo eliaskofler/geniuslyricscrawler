@@ -7,6 +7,7 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 
 (async () => {
     try {
+        console.log("Connecting to database...")
         const dbconn = await mysql.createConnection({
             host: 'obunic.net',
             user: 'root',
@@ -14,27 +15,22 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
             database: 'geniuslyrics'
         });
 
-        const browser0 = await puppeteer.launch({ headless: true });
+        console.log("Connected to database!")
+
+        console.log("Launching browser..")
+        const browser0 = await puppeteer.launch({ headless: false });
+        console.log("Browser launched!")
         
+        console.log("Opening new tabs and setting up...")
         await Promise.all([
             openNewPages(browser0),
         ]);
 
         async function openNewPages(browser) {
             const p1 = await browser.newPage();
-            const p2 = await browser.newPage();
-            const p3 = await browser.newPage();
-            const p4 = await browser.newPage();
-            const p5 = await browser.newPage();
-            const p6 = await browser.newPage();
 
             await Promise.all([
                 initializeGenius(p1, dbconn),
-                initializeGenius(p2, dbconn),
-                initializeGenius(p3, dbconn),
-                initializeGenius(p4, dbconn),
-                initializeGenius(p5, dbconn),
-                initializeGenius(p6, dbconn),
             ]);
         }
     } catch(error) {
@@ -43,7 +39,7 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 })();
 
 async function initializeGenius(p, dbconn) {
-    console.log("[+] Initializing crawler");
+    console.log("[+] Initialize Genius");
     setHeaders(p);
     lyricsCrawling(p, dbconn);
 }
@@ -51,7 +47,9 @@ async function initializeGenius(p, dbconn) {
 async function lyricsCrawling(p, dbconn) {
     try {
         console.log(new Date() + "crawling..");
+        console.log("getting a url to fetch");
         const url = await getUrlToFetch(dbconn);
+        console.log("got a url to fetch");
         //const url = "https://genius.com/Udo-jurgens-jeder-lugt-so-wie-er-kann-lyrics"
         if (!url) {
             console.error('No URL found to fetch.');
@@ -61,8 +59,23 @@ async function lyricsCrawling(p, dbconn) {
         const blacklistArray = blacklist.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
         await p.goto(url);
-        await delay(1000);
-        await p.waitForSelector('div[data-lyrics-container="true"]');
+        await delay(500);
+
+        const nahBro = await p.evaluate(() => {
+            const element = document.evaluate('//*[@id="lyrics-root"]/div[2]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            if (element.textContent === "Lyrics for this song have yet to be released. Please check back once the song has been released.") {
+                return true;
+            } else {
+                return false;
+            }
+        });
+
+        if (nahBro) {
+            console.log("nahbro")
+            await insertLyrics(url, "", "", "Lyrics for this song have yet to be released. Please check back once the song has been released.", "", "", "", dbconn);
+            await wipeOutUrl(url, dbconn);
+            return lyricsCrawling(p, dbconn);
+        }
 
         const lyrics = await p.evaluate(() => {
             const elements = document.querySelectorAll('div[data-lyrics-container="true"]');
@@ -140,11 +153,9 @@ async function lyricsCrawling(p, dbconn) {
             .filter(href => href.includes('https://genius.com'))
             .filter(href => !blacklistArray.includes(href));
 
-        await filteredHrefs.forEach((href) => {
-            putIntoDatabase(href, dbconn);
-        })
+        await batchInsertIntoDatabase(filteredHrefs, dbconn);
 
-        wipeOutUrl(url, dbconn);
+        await wipeOutUrl(url, dbconn);
         lyricsCrawling(p, dbconn);
 
     } catch(error) {
@@ -176,15 +187,6 @@ async function insertLyrics(url, title, artist, lyrics, release_date, views, cov
 
 async function wipeOutUrl(url, dbconn) {
     try {
-        // First, try to mark the URL as visited in the priority_song_urls table
-        let [rows, fields] = await dbconn.execute('UPDATE priority_song_urls SET visited = 1 WHERE url = ?', [url]);
-        
-        if (rows.affectedRows > 0) {
-            console.log('URL marked as visited in priority_song_urls:', url);
-            return true;
-        }
-
-        // If no rows were affected in priority_song_urls, try to mark it as visited in song_urls
         [rows, fields] = await dbconn.execute('UPDATE album_songs SET visited = 1 WHERE song_url = ?', [url]);
         
         if (rows.affectedRows > 0) {
@@ -202,15 +204,7 @@ async function wipeOutUrl(url, dbconn) {
 
 async function getUrlToFetch(dbconn) {
     try {
-        // First, try to get an unvisited URL from the priority_song_urls table
-        let [rows, fields] = await dbconn.execute('SELECT url FROM priority_song_urls WHERE visited=0 ORDER BY RAND() LIMIT 1');
-        
-        if (rows.length > 0) {
-            return rows[0].url;
-        } 
-
-        // If no unvisited URLs in priority_song_urls, fall back to song_urls
-        [rows, fields] = await dbconn.execute('SELECT song_url FROM album_songs WHERE visited=0 ORDER BY RAND() LIMIT 1');
+        [rows, fields] = await dbconn.execute('SELECT song_url FROM album_songs WHERE visited=0 LIMIT 1');
         
         if (rows.length > 0) {
             return rows[0].song_url;
@@ -224,14 +218,30 @@ async function getUrlToFetch(dbconn) {
     }
 }
 
-async function putIntoDatabase(url, dbconn) {
-    urlType = await urlIdentifier(url);
-
+async function batchInsertIntoDatabase(urls, dbconn) {
     try {
-        const [rows, fields] = await dbconn.execute(`INSERT INTO ${urlType} (url, visited) VALUES (?, ?)`, [url, 0]);
-        console.log('Data inserted successfully');
+        // Start a transaction
+        await dbconn.beginTransaction();
+
+        for (const url of urls) {
+            const urlType = await urlIdentifier(url);
+            const query = `INSERT IGNORE INTO ${urlType} (url, visited) VALUES (?, ?)`;
+
+            try {
+                await dbconn.execute(query, [url, 0]);
+            } catch (error) {
+                console.error(`Error inserting ${url} into ${urlType}:`, error);
+                // Optionally, you can rollback and rethrow the error
+                await dbconn.rollback();
+                throw error;
+            }
+        }
+
+        // Commit the transaction if all inserts succeed
+        await dbconn.commit();
+        console.log('All data inserted successfully');
     } catch (error) {
-        //console.error('Error inserting data:', error);
+        console.error('Transaction failed:', error);
     }
 }
 

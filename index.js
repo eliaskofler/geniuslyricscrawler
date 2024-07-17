@@ -53,7 +53,7 @@ async function lyricsCrawling(p, dbconn) {
         console.log("[:] crawling.. " + new Date());
         console.log("[.] getting a url to fetch");
         const url = await getUrlToFetch(dbconn);
-        console.log("[~] got a url to fetch");
+        console.log("[~] got a url to fetch: " + url);
         //const url = "https://genius.com/Udo-jurgens-jeder-lugt-so-wie-er-kann-lyrics"
         if (!url) {
             console.error('[!] No URL found to fetch.');
@@ -62,8 +62,24 @@ async function lyricsCrawling(p, dbconn) {
         const blacklist = await fs.readFile('blacklist.txt', 'utf-8');
         const blacklistArray = blacklist.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
+        let responseStatus = null;
+        p.on('response', response => {
+            if (response.url() === url) {
+                responseStatus = response.status();
+            }
+        });
+
         await p.goto(url);
         await delay(500);
+
+        if (responseStatus === 404) {
+            console.log("[~] No lyrics found on page. 404");
+            await insertLyrics(url, "", "", "We can't provide any lyrics to this song.", "", "", "", dbconn);
+            await wipeOutUrl(url, dbconn);
+            return lyricsCrawling(p, dbconn);
+        } else {
+            console.log(responseStatus);
+        }
 
         const nahBro = await p.evaluate(() => {
             const element = document.evaluate('//*[@id="lyrics-root"]/div[2]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;

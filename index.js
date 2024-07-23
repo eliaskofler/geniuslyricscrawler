@@ -1,8 +1,8 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
 const mysql = require('mysql2/promise');
 const fs = require('fs').promises;
-const http = require('http');
-const path = require('path');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 
 (async () => {
@@ -18,7 +18,15 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
         console.log("Connected to database!")
 
         console.log("Launching browser..")
-        const browser0 = await puppeteer.launch({ headless: true });
+        const browser0 = await puppeteer.launch({
+            headless: true,
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-web-security',
+                '--disable-features=IsolateOrigins,site-per-process'
+            ]
+        });
         console.log("Browser launched!")
         
         console.log("Opening new tabs and setting up...")
@@ -30,11 +38,13 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
             const p1 = await browser.newPage();
             const p2 = await browser.newPage();
             const p3 = await browser.newPage();
+            const p4 = await browser.newPage();
 
             await Promise.all([
                 initializeGenius(p1, dbconn),
                 initializeGenius(p2, dbconn),
                 initializeGenius(p3, dbconn),
+                initializeGenius(p4, dbconn),
             ]);
         }
     } catch(error) {
@@ -285,21 +295,34 @@ async function urlIdentifier(url) {
     }
 }
 
-async function setHeaders(p) {
-    await p.setExtraHTTPHeaders({
+async function setHeaders(page) {
+    await page.setExtraHTTPHeaders({
         'Accept-Language': 'en'
     });
 
-    await p.evaluateOnNewDocument(() => {
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+    await page.setViewport({
+        width: 1920,
+        height: 1080
+    });
+
+    await page.evaluateOnNewDocument(() => {
         Object.defineProperty(navigator, "language", {
             get: function() {
                 return "en-US";
             }
         });
-        Object.defineProperty(navigator, "language", {
+        Object.defineProperty(navigator, "languages", {
             get: function() {
                 return ["en-US", "en"];
             }
+        });
+        Object.defineProperty(navigator, 'webdriver', {
+            get: () => false,
+        });
+        Object.defineProperty(navigator, 'platform', {
+            get: () => 'Win32',
         });
     });
 }

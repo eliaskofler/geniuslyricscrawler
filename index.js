@@ -19,7 +19,7 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 
         console.log("Launching browser..")
         const browser0 = await puppeteer.launch({
-            headless: true,
+            headless: false,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -79,7 +79,7 @@ async function lyricsCrawling(p, dbconn) {
             }
         });
 
-        await p.goto(url);
+        await p.goto(url, { waitUntil: 'domcontentloaded' });
         await delay(500);
 
         if (responseStatus === 404) {

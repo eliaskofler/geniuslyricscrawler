@@ -19,7 +19,7 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 
         console.log("Launching browser..")
         const browser0 = await puppeteer.launch({
-            headless: true,
+            headless: false,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -36,15 +36,9 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 
         async function openNewPages(browser) {
             const p1 = await browser.newPage();
-            const p2 = await browser.newPage();
-            const p3 = await browser.newPage();
-            const p4 = await browser.newPage();
 
             await Promise.all([
                 initializeGenius(p1, dbconn),
-                initializeGenius(p2, dbconn),
-                initializeGenius(p3, dbconn),
-                initializeGenius(p4, dbconn),
             ]);
         }
     } catch(error) {
@@ -54,6 +48,18 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 
 async function initializeGenius(p, dbconn) {
     console.log("[+] Initialize Genius");
+
+    // Enable request interception
+    await p.setRequestInterception(true);
+
+    p.on('request', request => {
+        if (request.resourceType() === 'script') {
+            request.abort();
+        } else {
+            request.continue();
+        }
+    });
+
     setHeaders(p);
     lyricsCrawling(p, dbconn);
 }
@@ -79,7 +85,7 @@ async function lyricsCrawling(p, dbconn) {
             }
         });
 
-        await p.goto(url, { waitUntil: 'domcontentloaded' });
+        await p.goto(url);
         await delay(500);
 
         if (responseStatus === 404) {
@@ -161,10 +167,10 @@ async function lyricsCrawling(p, dbconn) {
         })
 
         const cover = await p.evaluate(() => {
-            const element = document.evaluate('//*[@id="application"]/main/div[1]/div[2]/div[2]/div/img', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-            return element ? element.src : null;
+            const metaTag = document.querySelector('meta[property="og:image"]');
+            return metaTag ? metaTag.getAttribute('content') : null;
         });
-
+        
         //console.log('url: ', url);
         //console.log('views: ', views)
         //console.log('artist: ', author);

@@ -19,7 +19,7 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 
         console.log("Launching browser..")
         const browser0 = await puppeteer.launch({
-            headless: false,
+            headless: true,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',

@@ -181,7 +181,7 @@ async function lyricsCrawling(page, dbconn) {
             .filter(href => href.includes('https://genius.com'))
             .filter(href => !blacklistArray.includes(href));
 
-        await batchInsertIntoDatabase(filteredHrefs, dbconn);
+        //await batchInsertIntoDatabase(filteredHrefs, dbconn);
 
         await wipeOutUrl(url, dbconn);
     } catch (error) {

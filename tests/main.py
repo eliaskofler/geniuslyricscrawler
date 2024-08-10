@@ -5,7 +5,6 @@ import random
 import time
 from colorama import Fore
 from lxml import html
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Database connection parameters
 db_params = {
@@ -25,18 +24,16 @@ def fetch_url_content(url):
 
 def initialize_genius(db_params):
     print(Fore.MAGENTA + "[+] Initializing crawler" + Fore.RESET)
-    start_workers(db_params)
+    start_crawling(db_params)
 
-def start_workers(db_params, num_workers=20):
-    print(Fore.MAGENTA + "[+] Starting workers" + Fore.RESET)
-    with ThreadPoolExecutor(max_workers=num_workers) as executor:
-        urls = get_all_urls_to_fetch(db_params)
-        futures = [executor.submit(lyrics_crawling, db_params, url) for url in urls]
-        for future in as_completed(futures):
-            try:
-                future.result()
-            except Exception as exc:
-                print(f"Error fetching URL: {exc}")
+def start_crawling(db_params):
+    print(Fore.MAGENTA + "[+] Starting crawling process" + Fore.RESET)
+    urls = get_all_urls_to_fetch(db_params)
+    for url in urls:
+        try:
+            lyrics_crawling(db_params, url)
+        except Exception as exc:
+            print(f"Error fetching URL: {exc}")
 
 def get_all_urls_to_fetch(db_params):
     try:

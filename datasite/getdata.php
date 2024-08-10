@@ -10,7 +10,7 @@ error_reporting(E_ALL);
 $servername = "localhost";
 $username = "admin";
 $password = "!Stiefel(123)";
-$dbname = "geniuslyrics";
+$dbname = "lyrics";
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -21,7 +21,7 @@ if ($conn->connect_error) {
 }
 
 // List of tables to get the count of rows
-$tables = array("lyrics", "album_songs", "artists", "albums", "album_urls", "artist_urls", "song_urls");
+$tables = array("lyrics", "album_songs", "artists", "albums", "urls_album", "urls_artist", "urls_song");
 
 // Initialize an array to store the counts
 $dataCounts = array();

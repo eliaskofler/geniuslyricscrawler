@@ -94,6 +94,7 @@
                         card.append($('<p>').text(formatCount(count)));
                         container.append(card);
                     });
+                    fetchData();
                 },
                 error: function(xhr, status, error) {
                     console.error("Error fetching data: ", status, error);
@@ -101,7 +102,7 @@
             });
         }
 
-        setInterval(fetchData, 120000);
+        fetchData();
     </script>
 </body>
 </html>

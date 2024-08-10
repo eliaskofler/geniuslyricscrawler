@@ -61,6 +61,7 @@ CREATE TABLE lyrics (
     artist TEXT,
     lyrics TEXT,
     release_date TEXT,
+    cover VARCHAR(1024),
     views TEXT,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

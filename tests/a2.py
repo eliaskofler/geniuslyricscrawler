@@ -129,8 +129,8 @@ try:
         next_artist_id = highest_artist_id + 1
 
         # Number of threads to use
-        num_threads = 100
-        batch_size = 1000  # Adjust the range as needed
+        num_threads = 1000
+        batch_size = 100000  # Adjust the range as needed
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             futures = [executor.submit(fetch_and_store_artist_data, artist_id, db_config)

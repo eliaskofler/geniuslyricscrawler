@@ -1,0 +1,100 @@
+CREATE TABLE urls_artist (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(1024) UNIQUE NOT NULL
+);
+
+CREATE TABLE urls_song (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(1024) UNIQUE NOT NULL
+);
+
+CREATE TABLE urls_album (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(1024) UNIQUE NOT NULL
+);
+
+CREATE TABLE urls_translation (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(1024) UNIQUE NOT NULL
+);
+
+CREATE TABLE urls_tag (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(1024) UNIQUE NOT NULL
+);
+
+CREATE TABLE urls_crap (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(1024) UNIQUE NOT NULL
+);
+
+CREATE TABLE artists (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(1024) UNIQUE NOT NULL,
+    name VARCHAR(1024),
+    slug VARCHAR(1024),
+    genius_id int,
+    description TEXT,
+    image_url VARCHAR(1024),
+    header_image_url VARCHAR(1024)
+);
+
+CREATE TABLE albums (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(1024) UNIQUE NOT NULL,
+    full_title VARCHAR(1024),
+    name VARCHAR(1024),
+    genius_id INT,
+    cover_art_thumbnail VARCHAR(1024),
+    cover_art_url VARCHAR(1024),
+    release_date VARCHAR(1024),
+
+    artist_name VARCHAR(1024),
+    artist_slug VARCHAR(1024),
+    artist_url VARCHAR(1024)
+);
+
+CREATE TABLE album_songs (
+    id SERIAL PRIMARY KEY,
+    song_url VARCHAR(1024),
+    album_id INT,
+    UNIQUE KEY unique_song_album (song_url, album_id)
+);
+
+CREATE TABLE lyrics (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(1024) UNIQUE NOT NULL,
+    title VARCHAR(1024),
+    artist VARCHAR(1024),
+    lyrics TEXT,
+    cover VARCHAR(1024),
+    release_date VARCHAR(1024),
+    views VARCHAR(1024)
+);
+
+
+CREATE INDEX idx_urls_url ON urls_artist(url);
+CREATE INDEX idx_urls_url ON urls_song(url);
+CREATE INDEX idx_urls_url ON urls_album(url);
+CREATE INDEX idx_urls_url ON urls_translation(url);
+CREATE INDEX idx_urls_url ON urls_tag(url);
+CREATE INDEX idx_urls_url ON urls_crap(url);
+
+CREATE INDEX idx_artists_url ON artists(url);
+CREATE INDEX idx_artists_name ON artists(name);
+CREATE INDEX idx_artists_slug ON artists(slug);
+CREATE INDEX idx_artists_genius_id ON artists(genius_id);
+
+CREATE INDEX idx_albums_url ON albums(url);
+CREATE INDEX idx_albums_name ON albums(name);
+CREATE INDEX idx_albums_artist_url ON albums(artist_url);
+CREATE INDEX idx_albums_genius_id ON albums(genius_id);
+
+CREATE INDEX idx_album_songs_song_url ON album_songs(song_url);
+CREATE INDEX idx_album_songs_album_id ON album_songs(album_id);
+
+CREATE INDEX idx_lyrics_url ON lyrics(url);
+CREATE INDEX idx_lyrics_title ON lyrics(title);
+CREATE INDEX idx_lyrics_artist ON lyrics(artist);
+
+ALTER TABLE lyrics ADD FULLTEXT(title, artist);

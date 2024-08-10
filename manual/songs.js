@@ -12,7 +12,7 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
             host: 'obunic.net',
             user: 'root',
             password: '!Stiefel(123)',
-            database: 'lyrics'
+            database: 'geniuslyrics'
         });
 
         console.log("Connected to database!");
@@ -58,7 +58,9 @@ async function initializeGenius(page, dbconn) {
     });
 
     await setHeaders(page);
-    await lyricsCrawling(page, dbconn);
+    while (true) {
+        await lyricsCrawling(page, dbconn);
+    }
 }
 
 async function lyricsCrawling(page, dbconn) {
@@ -181,7 +183,7 @@ async function lyricsCrawling(page, dbconn) {
             .filter(href => href.includes('https://genius.com'))
             .filter(href => !blacklistArray.includes(href));
 
-        await batchInsertIntoDatabase(filteredHrefs, dbconn);
+        //await batchInsertIntoDatabase(filteredHrefs, dbconn);
 
         await wipeOutUrl(url, dbconn);
     } catch (error) {
@@ -210,36 +212,50 @@ async function insertLyrics(url, title, artist, lyrics, release_date, views, cov
     }
 }
 
-async function wipeOutUrl(url, dbconn) {
+async function wipeOutUrl(url, db) {
     try {
-        [rows, fields] = await dbconn.execute('UPDATE urls_song SET visited = 1 WHERE url = ?', [url]);
+        filePath = "songs.txt"
+        let fileData = await fs.readFile(filePath, 'utf-8');
+        let lines = fileData.split('\n');
+        let originalLength = lines.length;
 
-        if (rows.affectedRows > 0) {
-            console.log('[~] URL marked as visited in song_urls:', url);
+        // Filter out the line with the matching URL
+        lines = lines.filter(line => {
+            let [songUrl] = line.split(',');
+            return songUrl !== url;
+        });
+
+        if (lines.length < originalLength) {
+            await fs.writeFile(filePath, lines.join('\n'), 'utf-8');
+            console.log('[~] URL deleted from songs.txt:', url);
             return true;
         } else {
-            console.error('URL not found in either table:', url);
+            console.error('URL not found in songs.txt:', url);
             return false;
         }
     } catch (error) {
-        console.error('Error marking URL as visited:', error);
+        console.error('Error deleting URL from songs.txt:', error);
         return false;
     }
 }
 
-async function getUrlToFetch(dbconn) {
+async function getUrlToFetch(db) {
     try {
-        const [rows, fields] = await dbconn.execute('SELECT url FROM urls_song WHERE NOT visited = 1 LIMIT 250');
-
-        if (rows.length > 0) {
-            const randomIndex = Math.floor(Math.random() * rows.length);
-            return rows[randomIndex].url;
+        filePath = "songs.txt"
+        let fileData = await fs.readFile(filePath, 'utf-8');
+        let lines = fileData.split('\n').filter(line => line.trim() !== ''); // Filter out any empty lines
+        
+        if (lines.length > 0) {
+            const randomIndex = Math.floor(Math.random() * lines.length);
+            let [songUrl] = lines[randomIndex].split(',');
+            console.log(songUrl);
+            return songUrl;
         } else {
-            console.error('No unvisited URLs found in the table.');
+            console.error('No URLs found in songs.txt.');
             return null;
         }
     } catch (error) {
-        console.error('Error fetching URL from the database:', error);
+        console.error('Error fetching URL from songs.txt:', error);
         return null;
     }
 }
@@ -250,10 +266,10 @@ async function batchInsertIntoDatabase(urls, dbconn) {
 
         for (const url of urls) {
             const urlType = await urlIdentifier(url);
-            const query = `INSERT IGNORE INTO ${urlType} (url) VALUES (?)`;
+            const query = `INSERT IGNORE INTO ${urlType} (url, visited) VALUES (?, ?)`;
 
             try {
-                await dbconn.execute(query, [url]);
+                await dbconn.execute(query, [url, 0]);
             } catch (error) {
                 console.error(`Error inserting ${url} into ${urlType}:`, error);
                 await dbconn.rollback();
@@ -270,17 +286,17 @@ async function batchInsertIntoDatabase(urls, dbconn) {
 
 async function urlIdentifier(url) {
     if (url.includes("/tags/")) {
-        return "urls_tag";
+        return "tag_urls";
     } else if (url.includes("https://genius.com/Genius-")) {
-        return "urls_translation";
+        return "translation_urls";
     } else if (url.endsWith("-lyrics")) {
-        return "urls_song";
+        return "song_urls";
     } else if (url.includes("/artists/")) {
-        return "urls_artist";
+        return "artist_urls";
     } else if (url.includes("/albums/")) {
-        return "urls_album";
+        return "album_urls";
     } else {
-        return "urls_crap";
+        return "crap_urls";
     }
 }
 

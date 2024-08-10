@@ -12,7 +12,7 @@ def getArtist(artist_id):
     # Function to insert artist data into the database
     def insert_artist_data(artist_data, db_config):
         try:
-            print("Inserting ARTIST data: " + artist_data['name'])
+            print("Found artist: " + artist_data['name'])
             connection = mysql.connector.connect(**db_config)
             cursor = connection.cursor()
             insert_query = """
@@ -36,6 +36,7 @@ def getArtist(artist_id):
                 artist_data['header_image_url']
             ))
             connection.commit()
+            print("Artist saved.")
         except Error as e:
             logging.error(f"Error inserting data into MySQL table: {e}")
         finally:

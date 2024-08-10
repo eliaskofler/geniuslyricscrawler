@@ -108,6 +108,7 @@ def fetch_and_insert_data():
     while True:
         # Construct the URL with the current page number
         url = f"{base_url}/{artist_id}/albums?page={page}"
+        print("Getting next: " + url)
         
         # Make a request to the API
         response = requests.get(url)

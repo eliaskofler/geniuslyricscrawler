@@ -9,9 +9,9 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
     try {
         console.log("Connecting to database...");
         const dbconn = await mysql.createConnection({
-            host: 'obunic.net',
+            host: '',
             user: 'root',
-            password: '!Stiefel(123)',
+            password: '',
             database: 'lyrics'
         });
 
